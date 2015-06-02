@@ -5,7 +5,7 @@ import os
 
 relative_path = os.path.dirname(os.path.realpath(__file__))
 A_filepath = relative_path + '/AAND_Data/A/872.08.4.itd'
-stim_obj = xd.Stimulation(A_filepath)
+stim_obj = thomas.Stimulation(A_filepath)
 traces = stim_obj.traces
 
 plt.figure()
