@@ -18,7 +18,7 @@ times  = stim_obj.times # I think the times are in the unit miliseconds.
 
 
 # the get the indices where the stimulus was played
-relevant_indices = (times > 20) & (times < 95)
+relevant_indices = (times > 20) & (times < 100)
 traces = traces[:,relevant_indices]
 times = times[relevant_indices]
 stim   = stim[:,relevant_indices]
