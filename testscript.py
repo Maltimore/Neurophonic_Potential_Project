@@ -31,7 +31,7 @@ stim   = stim[:,time_indices]
 
 # select the stimulation frequency that you want plots for
 ### SELECT frequency here
-user_spec_freq = 5000
+user_spec_freq = 4750
 freq_indices = np.where(stim_freqs == user_spec_freq)[0]
 
 
@@ -65,3 +65,39 @@ plt.ylabel("PSD")
 plt.yscale('log')
 plt.title("Power Spectral density for stimulation with " + str(user_spec_freq) \
           + " Hz")
+          
+
+
+
+
+
+# get all frequencies
+all_freqs = [stim_freqs[0]]
+for freq in stim_freqs:
+    if not(freq in all_freqs):
+        all_freqs.append(freq)
+all_freqs = np.array(all_freqs) # just making it a numpy array
+all_freqs = all_freqs[1:] # deleting first element (corresponding to no stimulation)
+
+margin = 8 # the margin around a frequency that we take to average psd
+psd_per_freq = np.zeros(len(all_freqs))
+## loop over all frequencies
+for idx, current_freq in enumerate(all_freqs):
+    
+    freq_indices = np.where(stim_freqs == current_freq)[0]
+    psd_list = []
+    for row_idx, freq_idx in enumerate(freq_indices):
+        psd_freqs,  psd = periodogram(traces[freq_idx,:], fs=48077)
+        psd_list.append(psd)
+    psd = np.average(psd_list,axis=0)
+    
+    # get indices of region around current_freq
+    mask = (psd_freqs > current_freq - margin) & (psd_freqs < current_freq + margin)
+    psd_per_freq[idx] = np.average(psd[mask])
+
+
+plt.figure()
+plt.plot(all_freqs,psd_per_freq)
+plt.xlabel("Stimulation frequency [Hz]")
+plt.ylabel("PSD peak value at corresponding trace")
+plt.title("Stimulation frequency vs. peak PSD at corresponding trace")
