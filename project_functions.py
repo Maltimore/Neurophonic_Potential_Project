@@ -7,14 +7,9 @@ import os
 from scipy.signal import periodogram
 from scipy.stats import mode
 
-relative_path = os.path.dirname(os.path.realpath(__file__))
-A1_filepath    = relative_path + '/AAND_Data/A/872.08.7.bf'
-A2_filepath    = relative_path + '/AAND_Data/A/872.08.9.bf'
-B1_filepath    = relative_path + '/AAND_Data/B/016.13.10.itd'
-B2_filepath    = relative_path + '/AAND_Data/B/016.14.11.itd'
 
 
-def plotPSDs(filepath, frequency):
+def plot_PSD_single_freq(filepath, frequency):
     """
     Function apparently should only be used for the files in folder A!!!
     """
@@ -38,7 +33,8 @@ def plotPSDs(filepath, frequency):
     times = times[time_indices]
     stim   = stim[:,time_indices]
     
-    
+    # find the indices of the frequency parameter that was passed to this
+    # function
     freq_indices = np.where(stim_freqs == frequency)[0]
     
     # Plot averaged voltage trace (average over all trials)
@@ -71,6 +67,28 @@ def plotPSDs(filepath, frequency):
     plt.yscale('log')
     plt.title("Power Spectral density for stimulation with " + str(frequency) \
               + " Hz")
+
+    return stim_obj
+    
+def frequency_tuning_plot(filepath):
+    # load data into acceptable numpy format, using pyXdPhys library
+    stim_obj     = thomas.Stimulation(filepath)
+    traces       = stim_obj.traces
+    stim_freqs   = stim_obj.depvar
+    stim         = stim_obj.stim
+    times        = stim_obj.times    
+    
+    # make copies of the complete times, traces, stim before we shorten them to the
+    # relevant (stimulated) length
+    complete_times  = times.copy()
+    complete_traces = traces.copy()
+    complete_stim   = stim.copy()
+    
+    # get the indices where the stimulus was played
+    time_indices = (times > 20) & (times < 100)
+    traces = traces[:,time_indices]
+    times = times[time_indices]
+    stim   = stim[:,time_indices]    
     
     # get all frequencies
     all_freqs = [stim_freqs[0]]
@@ -88,7 +106,7 @@ def plotPSDs(filepath, frequency):
     
         freq_indices = np.where(stim_freqs == current_freq)[0]
         psd_list = []
-        for row_idx, freq_idx in enumerate(freq_indices):
+        for freq_idx in freq_indices:
             psd_freqs,  psd = periodogram(traces[freq_idx,:], fs=48077)
             psd_list.append(psd)
         psd = np.average(psd_list,axis=0)
@@ -104,28 +122,14 @@ def plotPSDs(filepath, frequency):
     plt.ylabel("PSD peak value at corresponding trace")
     plt.title("Stimulation frequency vs. peak PSD at corresponding trace")
     
-    return 0
-    
-def ex2(filepath):
-    
-    stim_obj     = thomas.Stimulation(filepath)
-    traces       = stim_obj.traces
-    stim_freqs   = stim_obj.freqs
-    itd          = stim_obj.depvar
-    stim         = stim_obj.stim
-    times        = stim_obj.times
-    
-    complete_times  = times.copy()
-    complete_traces = traces.copy()
-    complete_stim   = stim.copy()
-    
-    frequency = mode(stim_freqs)[0][0]
-    
-    time_indices = (times > 20) & (times < 100)
-    traces = traces[:,time_indices]
-    times = times[time_indices]
-    stim   = stim[:,time_indices]
-    
-    freq_indices = np.where(stim_freqs == frequency)
-    
     return stim_obj
+
+
+relative_path = os.path.dirname(os.path.realpath(__file__))
+A1_filepath    = relative_path + '/AAND_Data/A/872.08.7.bf'
+A2_filepath    = relative_path + '/AAND_Data/A/872.08.9.bf'
+B1_filepath    = relative_path + '/AAND_Data/B/016.13.10.itd'
+B2_filepath    = relative_path + '/AAND_Data/B/016.14.11.itd'
+
+stim_obj = plot_PSD_single_freq(A1_filepath, 5000)
+stim_obj = frequency_tuning_plot(A1_filepath)
