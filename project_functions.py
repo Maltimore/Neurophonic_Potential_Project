@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pyXdPhys as thomas
 import os
 from scipy.signal import periodogram
+from scipy.stats import mode
 
 relative_path = os.path.dirname(os.path.realpath(__file__))
 A1_filepath    = relative_path + '/AAND_Data/A/872.08.7.bf'
@@ -14,24 +15,33 @@ B2_filepath    = relative_path + '/AAND_Data/B/016.14.11.itd'
 
 
 def plotPSDs(filepath, frequency):
+    """
+    Function apparently should only be used for the files in folder A!!!
+    """
     
+    # load data into acceptable numpy format, using pyXdPhys library
     stim_obj     = thomas.Stimulation(filepath)
     traces       = stim_obj.traces
     stim_freqs   = stim_obj.depvar
     stim         = stim_obj.stim
     times        = stim_obj.times    
     
+    # make copies of the complete times, traces, stim before we shorten them to the
+    # relevant (stimulated) length
     complete_times  = times.copy()
     complete_traces = traces.copy()
     complete_stim   = stim.copy()
     
+    # get the indices where the stimulus was played
     time_indices = (times > 20) & (times < 100)
     traces = traces[:,time_indices]
     times = times[time_indices]
     stim   = stim[:,time_indices]
     
+    
     freq_indices = np.where(stim_freqs == frequency)[0]
     
+    # Plot averaged voltage trace (average over all trials)
     fig, (ax1,ax2) = plt.subplots(2,1)
     plt.tight_layout()
     ax1.plot(complete_times, np.average(complete_stim[freq_indices,:], axis=0))
@@ -96,9 +106,26 @@ def plotPSDs(filepath, frequency):
     
     return 0
     
-def ex2(filepath, frequency):
+def ex2(filepath):
     
+    stim_obj     = thomas.Stimulation(filepath)
+    traces       = stim_obj.traces
+    stim_freqs   = stim_obj.freqs
+    itd          = stim_obj.depvar
+    stim         = stim_obj.stim
+    times        = stim_obj.times
     
-    return 0
-
+    complete_times  = times.copy()
+    complete_traces = traces.copy()
+    complete_stim   = stim.copy()
     
+    frequency = mode(stim_freqs)[0][0]
+    
+    time_indices = (times > 20) & (times < 100)
+    traces = traces[:,time_indices]
+    times = times[time_indices]
+    stim   = stim[:,time_indices]
+    
+    freq_indices = np.where(stim_freqs == frequency)
+    
+    return stim_obj
