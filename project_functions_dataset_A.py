@@ -123,13 +123,55 @@ def frequency_tuning_plot(filepath):
     plt.title("Stimulation frequency vs. peak PSD at corresponding trace")
     
     return stim_obj
+    
+def itd_freq_tuning(filepath):
+    
+    # load data into acceptable numpy format, using pyXdPhys library
+    stim_obj     = thomas.Stimulation(filepath)
+    traces       = stim_obj.traces
+    stim_freqs   = stim_obj.freqs
+    itds         = stim_obj.depvar
+    #stim         = stim_obj.stim
+    #times        = stim_obj.times 
+    
+    # There's only one frequency that is used for Stimulation
+    stimulation_freq = mode(stim_freqs)[0]
+
+    # get all ITDs
+    all_itds = np.sort(list(set(itds)))
+    all_itds = all_itds[1:] # deleting first element (corresponding to no stimulation (-6666))
+    
+    # the margin around a frequency that we take to average PSD
+    margin = 10 
+    psd_per_itd = np.zeros(len(all_itds))
+    
+    ## loop over all ITDs
+    for idx, current_itd in enumerate(all_itds):
+    
+        itd_indices = np.where(itds == current_itd)[0]
+        psd_list = []
+        for itd_idx in itd_indices:
+            psd_itds,  psd = periodogram(traces[itd_idx,:], fs=48077)
+            psd_list.append(psd)
+        psd = np.average(psd_list,axis=0)
+    
+        # get indices of region around the stimulation frequency
+        mask = (psd_itds > stimulation_freq - margin) & (psd_itds < stimulation_freq + margin)
+        psd_per_itd[idx] = np.average(psd[mask])
+
+    
+    plt.figure()
+    plt.plot(all_itds, psd_per_itd)
+    plt.xlabel("Itd [mi]")
+    plt.ylabel("PSD peak value at corresponding trace")
+    plt.title("ITD vs. peak PSD at corresponding trace")
+        
+    return stim_obj, psd_per_itd
 
 
 relative_path = os.path.dirname(os.path.realpath(__file__))
 A1_filepath    = relative_path + '/AAND_Data/A/872.08.7.bf'
 A2_filepath    = relative_path + '/AAND_Data/A/872.08.9.bf'
-B1_filepath    = relative_path + '/AAND_Data/B/016.13.10.itd'
-B2_filepath    = relative_path + '/AAND_Data/B/016.14.11.itd'
 
 stim_obj = plot_PSD_single_freq(A1_filepath, 5000)
 stim_obj = frequency_tuning_plot(A1_filepath)
