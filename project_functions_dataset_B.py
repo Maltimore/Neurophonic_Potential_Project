@@ -7,7 +7,69 @@ import os
 from scipy.signal import periodogram
 from scipy.stats import mode
 
+def plot_PSD_itd(filepath):
+    """
+    Function apparently should only be used for the files in folder A!!!
+    """
     
+    # load data into acceptable numpy format, using pyXdPhys library
+    stim_obj     = thomas.Stimulation(filepath)
+    traces       = stim_obj.traces
+    itds         = stim_obj.depvar # these are the ITDs in .itd files
+    stim         = stim_obj.stim
+    times        = stim_obj.times    
+    
+    # make copies of the complete times, traces, stim before we shorten them to the
+    # relevant (stimulated) length
+    complete_times  = times.copy()
+    complete_traces = traces.copy()
+    complete_stim   = stim.copy()
+    
+    # get the indices where the stimulus was played
+    time_indices = (times > 20) & (times < 100)
+    traces = traces[:,time_indices]
+    times = times[time_indices]
+    stim   = stim[:,time_indices]
+    
+    for itd in list(set(itds)):
+        # find the indices of the frequency parameter that was passed to this
+        # function
+        itd_indices = np.where(itds == itd)[0]
+        
+        # Plot averaged voltage trace (average over all trials)
+        fig, (ax1,ax2) = plt.subplots(2,1)
+        plt.tight_layout()
+        ax1.plot(complete_times, np.average(complete_stim[itd_indices,:], axis=0))
+        ax1.set_xlabel("Time [ms]")
+        ax1.set_ylabel("stimulus intensity")
+        ax1.set_title(str("stimulus and voltage trace averaged for itd " +str(itd) + " Hz"))
+        ax2.plot(complete_times, np.average(complete_traces[itd_indices,:], axis=0))
+        ax2.set_xlabel("Time [ms]")
+        ax2.set_ylabel("Voltage [mV]")
+        
+        # compute psd of the traces that were stimulated with user_spec_freq
+        psd_list = []
+        for row_idx, freq_idx in enumerate(itd_indices):
+            psd_freqs,  psd = periodogram(traces[freq_idx,:], fs=48077)
+            psd_list.append(psd)
+        psd = np.average(psd_list,axis=0)
+        
+        # plot PSD
+        # zoom in to relevat frequency portion
+    #    mask = (psd_freqs > frequency - 1000) & (psd_freqs < frequency + 1000)
+    #    zoomed_freq = psd_freqs[mask]
+    #    psd = psd[mask]
+    
+    
+        plt.figure()
+        plt.plot(psd_freqs, psd)
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("PSD")
+        plt.yscale('log')
+        plt.title("Power Spectral density for stimulation with " + str(frequency) \
+                  + " Hz")
+          
+          
 def frequency_tuning_plot(filepath):
     # load data into acceptable numpy format, using pyXdPhys library
     stim_obj     = thomas.Stimulation(filepath)
@@ -114,67 +176,4 @@ B2_filepath    = relative_path + '/AAND_Data/B/016.14.11.itd'
 #stim_obj = plot_PSD_single_freq(B1_filepath, 5000)
 #stim_obj = frequency_tuning_plot(B1_filepath)
 
-
-
-
-filepath = B1_filepath
-frequency = 5000
-
-"""
-Function apparently should only be used for the files in folder A!!!
-"""
-
-# load data into acceptable numpy format, using pyXdPhys library
-stim_obj     = thomas.Stimulation(filepath)
-traces       = stim_obj.traces
-stim_freqs   = stim_obj.depvar # these are the ITDs in .itd files
-stim         = stim_obj.stim
-times        = stim_obj.times    
-
-# make copies of the complete times, traces, stim before we shorten them to the
-# relevant (stimulated) length
-complete_times  = times.copy()
-complete_traces = traces.copy()
-complete_stim   = stim.copy()
-
-# get the indices where the stimulus was played
-time_indices = (times > 20) & (times < 100)
-traces = traces[:,time_indices]
-times = times[time_indices]
-stim   = stim[:,time_indices]
-
-# find the indices of the frequency parameter that was passed to this
-# function
-freq_indices = np.where(stim_freqs != -6666)[0]
-
-# Plot averaged voltage trace (average over all trials)
-fig, (ax1,ax2) = plt.subplots(2,1)
-plt.tight_layout()
-ax1.plot(complete_times, np.average(complete_stim[freq_indices,:], axis=0))
-ax1.set_xlabel("Time [ms]")
-ax1.set_ylabel("stimulus intensity")
-ax1.set_title(str("stimulus and voltage trace averaged for frequency " +str(frequency) + " Hz"))
-ax2.plot(complete_times, np.average(complete_traces[freq_indices,:], axis=0))
-ax2.set_xlabel("Time [ms]")
-ax2.set_ylabel("Voltage [mV]")
-
-# compute psd of the traces that were stimulated with user_spec_freq
-psd_list = []
-for row_idx, freq_idx in enumerate(freq_indices):
-    psd_freqs,  psd = periodogram(traces[freq_idx,:], fs=48077)
-    psd_list.append(psd)
-    print("triggered")
-psd = np.average(psd_list,axis=0)
-
-# plot PSD
-# zoom in to relevat frequency portion
-mask = (psd_freqs > frequency - 1000) & (psd_freqs < frequency + 1000)
-zoomed_freq = psd_freqs[mask]
-psd = psd[mask]
-plt.figure()
-plt.plot(zoomed_freq, psd)
-plt.xlabel("Frequency [Hz]")
-plt.ylabel("PSD")
-plt.yscale('log')
-plt.title("Power Spectral density for stimulation with " + str(frequency) \
-          + " Hz")
+plot_PSD_itd(B1_filepath)
