@@ -173,5 +173,5 @@ relative_path = os.path.dirname(os.path.realpath(__file__))
 A1_filepath    = relative_path + '/AAND_Data/A/872.08.7.bf'
 A2_filepath    = relative_path + '/AAND_Data/A/872.08.9.bf'
 
-stim_obj = plot_PSD_single_freq(A1_filepath, 5000)
+stim_obj = plot_PSD_single_freq(A1_filepath, 4750)
 stim_obj = frequency_tuning_plot(A1_filepath)
