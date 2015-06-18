@@ -7,7 +7,57 @@ import os
 from scipy.signal import periodogram
 from scipy.stats import mode
 
-
+def plot_PSD_mult_freq(filepath, frequency):
+    """
+    Function apparently should only be used for the files in folder A!!!
+    """
+    
+    # load data into acceptable numpy format, using pyXdPhys library
+    stim_obj     = thomas.Stimulation(filepath)
+    traces       = stim_obj.traces
+    stim_freqs   = stim_obj.depvar
+    stim         = stim_obj.stim
+    times        = stim_obj.times    
+    
+    
+    # get the indices where the stimulus was played
+    time_indices = (times > 20) & (times < 100)
+    traces = traces[:,time_indices]
+    times = times[time_indices]
+    stim   = stim[:,time_indices]
+    
+    # find the indices of the frequency parameter that was passed to this
+    # function
+    psd_plotting = []   
+    counterplot  = 0
+    for curr_freq in frequency:
+        freq_indices = np.where(stim_freqs == curr_freq)[0]
+       
+        # compute psd of the traces that were stimulated with user_spec_freq
+        psd_list = []
+        for row_idx, freq_idx in enumerate(freq_indices):
+            psd_freqs,  psd = periodogram(traces[freq_idx,:], fs=48077)
+            psd_list.append(psd)
+        psd = np.average(psd_list,axis=0)
+        
+        # plot PSD
+        # zoom in to relevat frequency portion
+        mask = (psd_freqs > np.min(frequency) - 500) & (psd_freqs < np.max(frequency) + 500)
+        #zoomed_freq = psd_freqs[mask]
+        psd_plotting.append(psd[mask])
+        counterplot += 1        
+        
+        
+    plt.figure(figsize =(12,8))
+    for i in range(len(frequency)):
+        cols = ['LightSkyBlue','MediumBlue','Black']
+        plt.plot(psd_plotting[i],color = cols[i])#zoomed_freq, 
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("PSD")
+        plt.yscale('log')
+    plt.legend(['Stimulation frequency: '+str(frequency[0]),\
+                'Stimulation frequency: '+str(frequency[1]),\
+                'Stimulation frequency: '+str(frequency[2])])  ### hard coded!
 
 def plot_PSD_single_freq(filepath, frequency):
     """
