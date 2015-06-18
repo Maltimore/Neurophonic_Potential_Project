@@ -16,7 +16,8 @@ def plot_PSD_itd(stim_obj, stimulated=True):
     traces       = stim_obj.traces
     itds         = stim_obj.depvar # these are the ITDs in .itd files
     stim         = stim_obj.stim
-    times        = stim_obj.times    
+    times        = stim_obj.times 
+    freqs        = stim_obj.freqs
     
     # make copies of the complete times, traces, stim before we shorten them to the
     # relevant (stimulated) length
@@ -60,9 +61,11 @@ def plot_PSD_itd(stim_obj, stimulated=True):
         ax2.set_ylabel("Voltage [mV]")
         plt.show()
         
+        frequency = mode(freqs)[0]
+        
         # compute psd of the traces that were stimulated with user_spec_freq
         psd_list = []
-        for freq_idx in itd_indices:
+        for row_idx, freq_idx in enumerate(itd_indices):
             psd_freqs,  psd = periodogram(traces[freq_idx,:], fs=48077)
             psd_list.append(psd)
         psd = np.average(psd_list,axis=0)
@@ -72,16 +75,18 @@ def plot_PSD_itd(stim_obj, stimulated=True):
     #    mask = (psd_freqs > frequency - 1000) & (psd_freqs < frequency + 1000)
     #    zoomed_freq = psd_freqs[mask]
     #    psd = psd[mask]
-    
-        
         plt.figure()
-        plt.plot(psd_freqs, psd)
+        plt.plot(psd_freqs[:800], psd[:800])
         plt.xlabel("Frequency [Hz]")
         plt.ylabel("PSD")
         plt.yscale('log')
-        plt.title("Power Spectral density for itd " + str(itd) + " us")
-        plt.ylim([10**-3,10**5])
-        plt.show()
+        plt.ylim(10**-1,10**6)
+        if stimulated == True:
+            plt.title("Power Spectral density for stimulation with " + str(frequency[0]) \
+                  + " Hz,"+" ITD = "+str(itd))
+        else:
+            plt.title("Power Spectral density for no stimulation, ITD = "+str(itd))            
+        
                   
     return stim_obj
           
@@ -185,7 +190,7 @@ def plot_PSD_itd(stim_obj, stimulated=True):
 #    return stim_obj, psd_per_itd
 
 
-relative_path = os.path.dirname(os.path.realpath(__file__))
+relative_path = os.getcwd()
 B1_filepath    = relative_path + '/AAND_Data/B/016.13.10.itd'
 B2_filepath    = relative_path + '/AAND_Data/B/016.14.11.itd'
 
