@@ -85,7 +85,7 @@ def plot_PSD_itd(stim_obj, stimulated=True):
             plt.title("Power Spectral density for stimulation with " + str(frequency[0]) \
                   + " Hz,"+" ITD = "+str(itd))
         else:
-            plt.title("Power Spectral density for no stimulation, ITD = "+str(itd))            
+            plt.title("Power Spectral density for no stimulation")            
         
                   
     return stim_obj

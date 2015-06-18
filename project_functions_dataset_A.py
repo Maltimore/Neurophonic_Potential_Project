@@ -51,13 +51,13 @@ def plot_PSD_mult_freq(filepath, frequency):
     plt.figure(figsize =(12,8))
     for i in range(len(frequency)):
         cols = ['LightSkyBlue','MediumBlue','Black']
-        plt.plot(psd_plotting[i],color = cols[i])#zoomed_freq, 
+        plt.plot(psd_freqs[mask],psd_plotting[i],color = cols[i])#zoomed_freq, 
         plt.xlabel("Frequency [Hz]")
         plt.ylabel("PSD")
         plt.yscale('log')
-    plt.legend(['Stimulation frequency: '+str(frequency[0]),\
-                'Stimulation frequency: '+str(frequency[1]),\
-                'Stimulation frequency: '+str(frequency[2])])  ### hard coded!
+    plt.legend(['Stimulation frequency: '+str(frequency[0])+' Hz',\
+                'Stimulation frequency: '+str(frequency[1])+' Hz',\
+                'Stimulation frequency: '+str(frequency[2])+' Hz'])  ### hard coded!
 
 def plot_PSD_single_freq(filepath, frequency):
     """

@@ -69,3 +69,8 @@ B1_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.1
 B2_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.14.11_clean.itd'
 stim_obj_b2clean = thomas.Stimulation(B2_clean, depvar_sort = False)  
 stim_obj_b1clean = thomas.Stimulation(B1_clean, depvar_sort = False)
+
+plt.plot(phases0)
+plt.title('The phases for dataset B, 1st file, itd = '+str(singleitd0))
+plt.xlabel('trial number')
+plt.ylabel('phase [radians]')
