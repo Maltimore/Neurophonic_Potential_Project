@@ -212,9 +212,9 @@ def itd_freq_tuning(filepath):
     
     plt.figure()
     plt.plot(all_itds, psd_per_itd)
-    plt.xlabel("Itd [mi]")
-    plt.ylabel("PSD peak value at corresponding trace")
-    plt.title("ITD vs. peak PSD at corresponding trace")
+    plt.xlabel("ITD [$\mu$s]")
+    plt.ylabel("PSD value around stimulation frequency "+str(stimulation_freq[0])+' Hz')
+    plt.title("ITD vs. peak PSD")
         
     return stim_obj, psd_per_itd
 
