@@ -32,9 +32,9 @@ def get_phases(stim_obj, index_itd = 0):
     single_itd = list(set(list(depvar)))[index_itd]
     
     if single_itd < 0:
-        stimuli = stimuli[valid_inds*2,:]
+        stimuli = stimuli[valid_inds*2+1,:]
     else:
-        stimuli = stimuli[valid_inds*2+1,:]        
+        stimuli = stimuli[valid_inds*2,:]        
     
     traces  = traces[valid_inds,:]
     freqs   = freqs[valid_inds]
@@ -63,8 +63,9 @@ def get_phases(stim_obj, index_itd = 0):
         phases[i] = np.mean(angles)
     
     
-    return phases
+    return phases, single_itd
 
 B1_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.13.10_clean.itd'
 B2_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.14.11_clean.itd'
 stim_obj_b2clean = thomas.Stimulation(B2_clean, depvar_sort = False)  
+stim_obj_b1clean = thomas.Stimulation(B1_clean, depvar_sort = False)
