@@ -5,7 +5,59 @@ import os
 from scipy.signal import periodogram
 from scipy.stats import mode
 
-
+def get_phases_single(stim_obj, n_slices, ind_itd = 0):
+    stimuli = stim_obj.stim
+    traces  = stim_obj.traces
+    freqs   = stim_obj.freqs
+    depvar  = stim_obj.depvar
+    true_times = stim_obj.times
+    times   = stim_obj.times   
+    
+    time_indices = (times > 20.) & (times <  100.)
+    traces       = traces[:,time_indices]
+    times        = times[time_indices]
+    stimuli      = stimuli[:,time_indices]
+    
+    valid_inds = np.where(freqs != -6666)[0]
+    stimuli = stimuli[valid_inds*2,:]
+    traces  = traces[valid_inds,:]
+    freqs   = freqs[valid_inds]
+    depvar  = depvar[valid_inds]
+    
+    single_itd = list(set(list(depvar)))[ind_itd] 
+    
+    itd_inds = np.where(depvar == single_itd)[0]
+    
+    stimuli = stimuli[itd_inds,:]
+    traces  = traces[itd_inds,:]
+    freqs   = freqs[itd_inds]
+    depvar  = depvar[itd_inds]   
+    
+    
+    dt = true_times[1]*10**(-3)
+    n_traces, n_timepoints = np.shape(traces)   
+    phases = np.zeros([n_traces, n_slices]) 
+    slice_size = int(n_timepoints/n_slices)    
+    
+    for i in range(n_traces):
+        for j in range(n_slices):
+            stim_freq = freqs[i]
+            correlation = np.correlate(stimuli[i,j*slice_size:(j+1)*slice_size],traces[i,j*slice_size:(j+1)*slice_size],'full')
+            ft = np.fft.fft(correlation)
+            freqs_ft = np.fft.fftfreq(len(correlation), dt)
+            mask = np.where((freqs_ft > stim_freq - 3.) & (freqs_ft < stim_freq + 3.))[0]
+            angles = np.angle(ft[mask])
+            phases[i,j] = np.mean(angles)
+            
+    variance = np.zeros(n_traces)
+    variance = np.var(phases, axis = 1)
+    
+    return phases, single_itd, variance
+        
+    
+    
+    
+    
 
 def get_phases(stim_obj, index_itd = 0):
     """
@@ -55,7 +107,7 @@ def get_phases(stim_obj, index_itd = 0):
     
     for i in range(n_traces):
         stim_freq = freqs[i]
-        correlation = np.correlate(stimuli[i,:],traces[i,:],'full')
+        correlation = np.correlate(stimuli[i,:],traces[i,:],'same')
         ft = np.fft.fft(correlation)
         freqs_ft = np.fft.fftfreq(len(correlation), dt)
         mask = np.where((freqs_ft > stim_freq - 3.) & (freqs_ft < stim_freq + 3.))[0]
@@ -69,3 +121,45 @@ B1_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.1
 B2_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.14.11_clean.itd'
 stim_obj_b2clean = thomas.Stimulation(B2_clean, depvar_sort = False)  
 stim_obj_b1clean = thomas.Stimulation(B1_clean, depvar_sort = False)
+
+phase_b1_0, sitd_b1_0 = get_phases(stim_obj_b1clean, index_itd = 0)
+phase_b1_1, sitd_b1_1 = get_phases(stim_obj_b1clean, index_itd = 1)
+plt.figure()
+plt.plot(phase_b1_0)
+plt.plot(phase_b1_1)
+plt.xlabel('trials')
+plt.ylabel('phase [radians]')
+plt.title('data B, 1st file')
+plt.legend(['ITD ='+str(sitd_b1_0)+' $\mu$s', 'ITD ='+str(sitd_b1_1)+' $\mu$s'])
+
+
+phase_b2_0, sitd_b2_0 = get_phases(stim_obj_b2clean, index_itd = 0)
+phase_b2_1, sitd_b2_1 = get_phases(stim_obj_b2clean, index_itd = 1)
+plt.figure()
+plt.plot(phase_b2_0)
+plt.plot(phase_b2_1)
+plt.xlabel('trials')
+plt.ylabel('phase [radians]')
+plt.legend(['ITD ='+str(sitd_b2_0)+' $\mu$s', 'ITD ='+str(sitd_b2_1)+' $\mu$s'])
+plt.title('data B, 2nd file')
+
+plt.figure()
+for i in range(10):
+    plt.plot(phases0[i,:], 'b')
+    plt.plot(phases1[i,:], 'r')
+    plt.xticks(np.linspace(0,4,5), ["1", "2", "3", "4", "5"])
+    plt.xlim(0,3)
+    plt.xlabel('number of slice')
+    plt.ylabel('phase [radians]')
+plt.legend(['ITD = '+str(singleitd0),'ITD = '+str(singleitd1)])
+
+plt.figure()
+plt.plot(variance0)
+plt.plot(variance1)
+plt.xlabel('number of trial')
+plt.ylabel('variance of phases in single trial')
+plt.legend(['ITD = '+str(singleitd0),'ITD = '+str(singleitd1)])
+plt.title('number of slices per trial: 4')
+
+plt.plot(mean_vector0)
+plt.plot(mean_vector2)
