@@ -7,7 +7,7 @@ from scipy.stats import mode
 
 
 
-def get_phases(stim_obj):
+def get_phases(stim_obj, index_itd = 0):
     """
     INPUT:
     needs to be "clean", i.e. the number of stimulus traces needs to be twice
@@ -29,7 +29,7 @@ def get_phases(stim_obj):
     # get rid of non stimulated stimulus traces, voltage traces, freqs and depvar
     valid_inds = np.where(freqs != -6666)[0]
     
-    single_itd = list(set(list(depvar)))[0]
+    single_itd = list(set(list(depvar)))[index_itd]
     
     if single_itd < 0:
         stimuli = stimuli[valid_inds*2,:]
@@ -40,7 +40,6 @@ def get_phases(stim_obj):
     freqs   = freqs[valid_inds]
     depvar  = depvar[valid_inds]
     
-    single_itd = list(set(list(depvar)))[1]
     itd_inds = np.where(depvar == single_itd)[0]
     
     stimuli = stimuli[itd_inds,:]
@@ -66,6 +65,6 @@ def get_phases(stim_obj):
     
     return phases
 
-    
+B1_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.13.10_clean.itd'
 B2_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.14.11_clean.itd'
 stim_obj_b2clean = thomas.Stimulation(B2_clean, depvar_sort = False)  
