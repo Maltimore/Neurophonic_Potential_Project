@@ -13,6 +13,16 @@ B1_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.1
 B2_clean = '/Users/hanna/Desktop/Neurophonic_Potential_Project/AAND_Data/B/016.14.11_clean.itd' 
 stim_obj_b1clean = thomas.Stimulation(B1_clean, depvar_sort = False)
 
+# plotting subsequent PSDs for dataset A, bf files
+A1_filepath = os.getcwd()+'/AAND_Data/A/872.08.7.bf'
+plot_PSD_mult_freq(A1_filepath, [4500,5000,5500])
+
+
+# plotting PSDs for dataset B
+stim_obj = plot_PSD_itd(stim_obj_b1clean, stimulated=True)
+
+
+
 phases0, singleitd0, variance0 = get_phases_single(stim_obj_b1clean, 4, 0)
 n_traces, n_slices = np.shape(phases0)
 

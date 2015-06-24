@@ -9,7 +9,7 @@ from scipy.stats import mode
 
 def plot_PSD_mult_freq(filepath, frequency):
     """
-    Function apparently should only be used for the files in folder A!!!
+    Function plots subsequent 
     """
     
     # load data into acceptable numpy format, using pyXdPhys library
@@ -48,9 +48,32 @@ def plot_PSD_mult_freq(filepath, frequency):
         counterplot += 1        
         
         
-    plt.figure(figsize =(12,8))
+    
+    plt.figure(figsize = (12,8))
+    cols = ['Salmon','MediumBlue','Black']
+    plt.plot(psd_freqs[mask],psd_plotting[0],color = cols[0])#zoomed_freq, 
+    plt.xlabel("Frequency [Hz]")
+    plt.ylabel("PSD")
+    plt.yscale('log')
+    plt.legend(['Stimulation frequency: '+str(frequency[0])+' Hz'])  ### hard coded!
+    plt.plot(np.ones(100)*frequency[0],np.linspace(1,10**4,100),'--r')
+    
+    plt.figure(figsize = (12,8))
+    for i in range(2):
+        cols = ['Salmon','MediumBlue']
+        plt.plot(psd_freqs[mask],psd_plotting[i],color = cols[i])#zoomed_freq, 
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("PSD")
+        plt.yscale('log')
+        plt.legend(['Stimulation frequency: '+str(frequency[0])+' Hz',\
+                'Stimulation frequency: '+str(frequency[1])+' Hz'])  ### hard coded!
+    plt.plot(np.ones(100)*frequency[0],np.linspace(1,10**4,100),'--r')
+    plt.plot(np.ones(100)*frequency[1],np.linspace(1,10**4,100),'--r')
+
+    
+    plt.figure(figsize = (12,8))
     for i in range(len(frequency)):
-        cols = ['LightSkyBlue','MediumBlue','Black']
+        cols = ['Salmon','MediumBlue','Black']
         plt.plot(psd_freqs[mask],psd_plotting[i],color = cols[i])#zoomed_freq, 
         plt.xlabel("Frequency [Hz]")
         plt.ylabel("PSD")
