@@ -88,7 +88,7 @@ def plot_PSD_itd(stim_obj, stimulated=True):
         else:
             plt.title("Power Spectral density for no stimulation")            
         
-    plt.figure(dpi=1200)
+    plt.figure(figsize = (12,8))
     plt.plot(psd_freqs[:800], psds[0][:800], color = 'Salmon')
     plt.plot(psd_freqs[:800],psds[1][:800], color = 'b')
     plt.xlabel("Frequency [Hz]")
