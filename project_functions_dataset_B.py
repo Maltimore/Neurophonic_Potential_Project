@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pyXdPhys as thomas
 import os
 from scipy.signal import periodogram
-from scipy.stats import mode
+from scipy.stats import mode, linregress
 
 def plot_PSD_itd(stim_obj, stimulated=True):
     """
@@ -40,6 +40,7 @@ def plot_PSD_itd(stim_obj, stimulated=True):
     
     single_itds = list(set(itds))
     single_itds.remove(-6666) # remove the unstimulated trials
+    psds = []
     for itd in single_itds:
         # find the indices of the frequency parameter that was passed to this
         # function
@@ -69,7 +70,7 @@ def plot_PSD_itd(stim_obj, stimulated=True):
             psd_freqs,  psd = periodogram(traces[freq_idx,:], fs=48077)
             psd_list.append(psd)
         psd = np.average(psd_list,axis=0)
-        
+        psds.append(psd)
         # plot PSD
         # zoom in to relevat frequency portion
     #    mask = (psd_freqs > frequency - 1000) & (psd_freqs < frequency + 1000)
@@ -87,9 +88,29 @@ def plot_PSD_itd(stim_obj, stimulated=True):
         else:
             plt.title("Power Spectral density for no stimulation")            
         
-                  
+    plt.figure()
+    plt.plot(psd_freqs[:800], psds[0][:800], color = 'Salmon')
+    plt.plot(psd_freqs[:800],psds[1][:800], color = 'b')
+    plt.xlabel("Frequency [Hz]")
+    plt.ylabel("PSD")
+    plt.yscale('log')
+    plt.ylim(10**-1,10**6)            
+    plt.title("Power Spectral density for stimulation with " + str(frequency[0]) \
+                  + " Hz")
+    plt.legend(['ITD = '+str(single_itds[0])+' $\mu$s','ITD = '+str(single_itds[1])+' $\mu$s'])
+    
+    
     return stim_obj
-          
+
+def regression_residuals(phases):
+    
+    num_traces = len(phases)
+    x = np.arange(num_traces)
+
+    slope, intercept, r_value, p_value, std_err = linregress(x,phases)
+    residuals = phases - (intercept + slope*x)
+    
+    return slope, intercept, residuals
           
 #def frequency_tuning_plot(filepath):
 #    # load data into acceptable numpy format, using pyXdPhys library
@@ -190,11 +211,11 @@ def plot_PSD_itd(stim_obj, stimulated=True):
 #    return stim_obj, psd_per_itd
 
 
-relative_path = os.getcwd()
-B1_filepath    = relative_path + '/AAND_Data/B/016.13.10.itd'
-B2_filepath    = relative_path + '/AAND_Data/B/016.14.11.itd'
+#relative_path = os.getcwd()
+#B1_filepath    = relative_path + '/AAND_Data/B/016.13.10.itd'
+#B2_filepath    = relative_path + '/AAND_Data/B/016.14.11.itd'
 
 
 
-stim_obj     = thomas.Stimulation(B1_filepath)
-stim_obj = plot_PSD_itd(stim_obj, stimulated=True)
+#stim_obj     = thomas.Stimulation(B1_filepath)
+#stim_obj = plot_PSD_itd(stim_obj, stimulated=True)

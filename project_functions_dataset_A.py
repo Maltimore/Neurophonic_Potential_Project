@@ -55,9 +55,14 @@ def plot_PSD_mult_freq(filepath, frequency):
         plt.xlabel("Frequency [Hz]")
         plt.ylabel("PSD")
         plt.yscale('log')
-    plt.legend(['Stimulation frequency: '+str(frequency[0])+' Hz',\
+        plt.legend(['Stimulation frequency: '+str(frequency[0])+' Hz',\
                 'Stimulation frequency: '+str(frequency[1])+' Hz',\
                 'Stimulation frequency: '+str(frequency[2])+' Hz'])  ### hard coded!
+    plt.plot(np.ones(100)*frequency[0],np.linspace(1,10**4,100),'--r')
+    plt.plot(np.ones(100)*frequency[1],np.linspace(1,10**4,100),'--r')
+    plt.plot(np.ones(100)*frequency[2],np.linspace(1,10**4,100),'--r')
+
+
 
 def plot_PSD_single_freq(filepath, frequency):
     """
@@ -219,7 +224,7 @@ def itd_freq_tuning(filepath):
     return stim_obj, psd_per_itd
 
 
-relative_path = os.path.dirname(os.path.realpath(__file__))
+relative_path = os.getcwd()
 A1_filepath    = relative_path + '/AAND_Data/A/872.08.7.bf'
 A2_filepath    = relative_path + '/AAND_Data/A/872.08.9.bf'
 
