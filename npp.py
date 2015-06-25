@@ -1,11 +1,14 @@
-## Project -> put everything into functions
+# This file contains all functions used in the Neurophonic Potential Project
+# (AAND summer semester 2015)
+# Malte Esders, Hüseyin Camalan, Hanna Röhling
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pyXdPhys as thomas
 import os
 from scipy.signal import periodogram
-from scipy.stats import mode
+from scipy.stats import mode, linregress
+
 
 def plot_PSD_mult_freq(filepath, frequency):
     """
@@ -262,10 +265,216 @@ def itd_freq_tuning(filepath):
     plt.title("ITD vs. peak PSD")
         
     return stim_obj, psd_per_itd
-    
-relative_path = os.getcwd()
-A1_filepath    = relative_path + '/AAND_Data/A/872.08.7.bf'
-A2_filepath    = relative_path + '/AAND_Data/A/872.08.9.bf'
 
-stim_obj = plot_PSD_single_freq(A1_filepath, 4750)
-stim_obj = frequency_tuning_plot(A1_filepath)
+def plot_PSD_itd(stim_obj, stimulated=True):
+    """
+    generates plots of 
+    """
+    
+    # load data into acceptable numpy format, using pyXdPhys library
+    traces       = stim_obj.traces
+    itds         = stim_obj.depvar # these are the ITDs in .itd files
+    stim         = stim_obj.stim
+    times        = stim_obj.times 
+    freqs        = stim_obj.freqs
+    
+    # make copies of the complete times, traces, stim before we shorten them to the
+    # relevant (stimulated) length
+    complete_times  = times.copy()
+    complete_traces = traces.copy()
+    complete_stim   = stim.copy()
+    
+    # get the indices where the stimulus was played
+    if stimulated:
+        lowerbound = 20
+        upperbound = 100
+    else:
+        lowerbound = 120
+        upperbound = 200
+        
+    time_indices = (times > lowerbound) & (times < upperbound)
+    traces = traces[:,time_indices]
+    times = times[time_indices]
+    stim   = stim[:,time_indices]
+    
+    single_itds = list(set(itds))
+    single_itds.remove(-6666) # remove the unstimulated trials
+    psds = []
+    for itd in single_itds:
+        # find the indices of the frequency parameter that was passed to this
+        # function
+        itd_indices = np.where(itds == itd)[0]
+        
+        print(single_itds)
+        print("Averaging over " +str(len(itd_indices))+ " trials for " \
+              + "itd " +str(itd))
+        
+        # Plot averaged voltage trace (average over all trials)
+        fig, (ax1,ax2) = plt.subplots(2,1)
+        plt.tight_layout()
+        ax1.plot(complete_times, np.average(complete_stim[itd_indices,:], axis=0))
+        ax1.set_xlabel("Time [ms]")
+        ax1.set_ylabel("stimulus intensity")
+        ax1.set_title(str("stimulus and voltage trace averaged for itd " +str(itd) + " Hz"))
+        ax2.plot(complete_times, np.average(complete_traces[itd_indices,:], axis=0))
+        ax2.set_xlabel("Time [ms]")
+        ax2.set_ylabel("Voltage [mV]")
+        plt.show()
+        
+        frequency = mode(freqs)[0]
+        
+        # compute psd of the traces that were stimulated with user_spec_freq
+        psd_list = []
+        for row_idx, freq_idx in enumerate(itd_indices):
+            psd_freqs,  psd = periodogram(traces[freq_idx,:], fs=48077)
+            psd_list.append(psd)
+        psd = np.average(psd_list,axis=0)
+        psds.append(psd)
+        # plot PSD
+        # zoom in to relevat frequency portion
+    #    mask = (psd_freqs > frequency - 1000) & (psd_freqs < frequency + 1000)
+    #    zoomed_freq = psd_freqs[mask]
+    #    psd = psd[mask]
+        plt.figure()
+        plt.plot(psd_freqs[:800], psd[:800])
+        plt.xlabel("Frequency [Hz]")
+        plt.ylabel("PSD")
+        plt.yscale('log')
+        plt.ylim(10**-1,10**6)
+        if stimulated == True:
+            plt.title("Power Spectral density for stimulation with " + str(frequency[0]) \
+                  + " Hz,"+" ITD = "+str(itd))
+        else:
+            plt.title("Power Spectral density for no stimulation")            
+        
+    plt.figure(figsize = (12,8))
+    plt.plot(psd_freqs[:800], psds[0][:800], color = 'Salmon')
+    plt.plot(psd_freqs[:800],psds[1][:800], color = 'b')
+    plt.xlabel("Frequency [Hz]")
+    plt.ylabel("PSD")
+    plt.yscale('log')
+    plt.ylim(10**-1,10**6)            
+    plt.title("Power Spectral density for stimulation with " + str(frequency[0]) \
+                  + " Hz")
+    plt.legend(['ITD = '+str(single_itds[0])+' $\mu$s','ITD = '+str(single_itds[1])+' $\mu$s'])
+    
+    
+    return stim_obj
+
+def regression_residuals(phases):
+    
+    num_traces = len(phases)
+    x = np.arange(num_traces)
+
+    slope, intercept, r_value, p_value, std_err = linregress(x,phases)
+    residuals = phases - (intercept + slope*x)
+    
+    return slope, intercept, residuals
+
+def get_phases_single(stim_obj, n_slices, ind_itd = 0):
+    stimuli = stim_obj.stim
+    traces  = stim_obj.traces
+    freqs   = stim_obj.freqs
+    depvar  = stim_obj.depvar
+    true_times = stim_obj.times
+    times   = stim_obj.times   
+    
+    time_indices = (times > 20.) & (times <  100.)
+    traces       = traces[:,time_indices]
+    times        = times[time_indices]
+    stimuli      = stimuli[:,time_indices]
+    
+    valid_inds = np.where(freqs != -6666)[0]
+    stimuli = stimuli[valid_inds*2,:]
+    traces  = traces[valid_inds,:]
+    freqs   = freqs[valid_inds]
+    depvar  = depvar[valid_inds]
+    
+    single_itd = list(set(list(depvar)))[ind_itd] 
+    
+    itd_inds = np.where(depvar == single_itd)[0]
+    
+    stimuli = stimuli[itd_inds,:]
+    traces  = traces[itd_inds,:]
+    freqs   = freqs[itd_inds]
+    depvar  = depvar[itd_inds]   
+    
+    
+    dt = true_times[1]*10**(-3)
+    n_traces, n_timepoints = np.shape(traces)   
+    phases = np.zeros([n_traces, n_slices]) 
+    slice_size = int(n_timepoints/n_slices) 
+    
+    for i in range(n_traces):
+        for j in range(n_slices):
+            stim_freq = freqs[i]
+            correlation = np.correlate(stimuli[i,j*slice_size:(j+1)*slice_size],traces[i,j*slice_size:(j+1)*slice_size],'same')
+            ft = np.fft.fft(correlation)
+            freqs_ft = np.fft.fftfreq(len(correlation), dt)
+            mask = np.where((freqs_ft > stim_freq - 3.) & (freqs_ft < stim_freq + 3.))[0]
+            angles = np.angle(ft[mask])
+            phases[i,j] = np.mean(angles)
+            
+    variance = np.zeros(n_traces)
+    variance = np.var(phases, axis = 1)
+    
+    return phases, single_itd, variance
+    
+
+def get_phases(stim_obj, index_itd = 0):
+    """
+    INPUT:
+    needs to be "clean", i.e. the number of stimulus traces needs to be twice
+    the number of voltage traces
+    """    
+    stimuli = stim_obj.stim
+    traces  = stim_obj.traces
+    freqs   = stim_obj.freqs
+    depvar  = stim_obj.depvar
+    true_times = stim_obj.times
+    times   = stim_obj.times    
+    
+    # get the indices where the stimulus was (definetely) played
+    time_indices = (times > 20.) & (times <  100.)
+    traces       = traces[:,time_indices]
+    times        = times[time_indices]
+    stimuli      = stimuli[:,time_indices]
+    
+    # get rid of non stimulated stimulus traces, voltage traces, freqs and depvar
+    valid_inds = np.where(freqs != -6666)[0]
+    
+    single_itd = list(set(list(depvar)))[index_itd]
+    
+    if single_itd < 0:
+        stimuli = stimuli[valid_inds*2+1,:]
+    else:
+        stimuli = stimuli[valid_inds*2,:]        
+    
+    traces  = traces[valid_inds,:]
+    freqs   = freqs[valid_inds]
+    depvar  = depvar[valid_inds]
+    
+    itd_inds = np.where(depvar == single_itd)[0]
+    
+    stimuli = stimuli[itd_inds,:]
+    traces  = traces[itd_inds,:]
+    freqs   = freqs[itd_inds]
+    depvar  = depvar[itd_inds]    
+    
+    
+    dt = true_times[1]*10**(-3)
+    
+    n_traces, n_timepoints = np.shape(traces)   
+    phases = np.zeros(n_traces)    
+    
+    for i in range(n_traces):
+        stim_freq = freqs[i]
+        correlation = np.correlate(stimuli[i,:],traces[i,:],'same')
+        ft = np.fft.fft(correlation)
+        freqs_ft = np.fft.fftfreq(len(correlation), dt)
+        mask = np.where((freqs_ft > stim_freq - 3.) & (freqs_ft < stim_freq + 3.))[0]
+        angles = np.angle(ft[mask])
+        phases[i] = np.mean(angles)
+    
+    
+    return phases, single_itd

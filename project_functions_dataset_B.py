@@ -9,7 +9,7 @@ from scipy.stats import mode, linregress
 
 def plot_PSD_itd(stim_obj, stimulated=True):
     """
-    Function apparently should only be used for the files in folder A!!!
+    generates plots of 
     """
     
     # load data into acceptable numpy format, using pyXdPhys library
