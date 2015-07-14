@@ -16,14 +16,18 @@ def plot_PSD_mult_freq(filepath, frequency):
     frequencies given by the input parameter frequency
     
     INPUT:
-    filepath: Filepath to one of the bf files from dataset A
-    frequency: list of three different stimulation frequencies (must be valid)
+    filepath:  Filepath to one of the bf files from dataset A
+    frequency: list of exactly three different stimulation frequencies 
+               (must be valid)
+    ---------------------------------------------------------------------------
+    OUTPUT: no explicit output, but plots are being generated within the 
+            function
     """
     
     # load data into acceptable numpy format, using pyXdPhys library
     stim_obj     = thomas.Stimulation(filepath)
     traces       = stim_obj.traces
-    stim_freqs   = stim_obj.depvar
+    stim_freqs   = stim_obj.depvar  
     stim         = stim_obj.stim
     times        = stim_obj.times    
     
@@ -102,9 +106,10 @@ def plot_PSD_single_freq(filepath, frequency):
     
     INPUT:
     filepath: Filepath to one of the bf files from dataset A
-    frequency: single (valid) stimulation frequencies
+    frequency: single (valid) stimulation frequency
+    ---------------------------------------------------------------------------
     OUTPUT:
-    returns the Stimulation object
+    stim_obj: The stimulation object used for the computations
     """
     
     # load data into acceptable numpy format, using pyXdPhys library
@@ -164,6 +169,18 @@ def plot_PSD_single_freq(filepath, frequency):
     return stim_obj
     
 def frequency_tuning_plot(filepath):
+    """
+    Function computes and plots the frequency tuning plot of the respective .bf
+    file
+    
+    INPUT:
+    filepath: Filepath to one of the bf files from dataset A
+    ---------------------------------------------------------------------------
+    OUTPUT:
+    stim_obj: The stimulation object used for the computations
+    """
+    
+    
     # load data into acceptable numpy format, using pyXdPhys library
     stim_obj     = thomas.Stimulation(filepath)
     traces       = stim_obj.traces
@@ -219,9 +236,14 @@ def frequency_tuning_plot(filepath):
     
 def itd_freq_tuning(filepath):
     """
-    generates a ITD tuning plot
+    generates an ITD tuning plot
+    
     INPUT:
     filepath: filepath to an ITD file of the A folder
+    ---------------------------------------------------------------------------
+    OUTPUT:
+    stim_obj: The stimulation object used for the computations
+    psd_per_itd: The power spectral density at the respective ITD value
     """
     
     # load data into acceptable numpy format, using pyXdPhys library
@@ -269,6 +291,15 @@ def itd_freq_tuning(filepath):
 def plot_PSD_itd(stim_obj, stimulated=True):
     """
     generates plots of 
+    
+    INPUT:
+    stim_obj: Stimulation object created out of one of the ITD files of the B 
+              folder
+    stimulated: Using a stimulated portion of the signal (True) or an 
+                unstimulated one (False)
+    ---------------------------------------------------------------------------
+    OUTPUT:
+    stim_obj: The stimulation object used for the computations
     """
     
     # load data into acceptable numpy format, using pyXdPhys library
@@ -362,7 +393,17 @@ def plot_PSD_itd(stim_obj, stimulated=True):
     return stim_obj
 
 def regression_residuals(phases):
+    """
+    conducts a linear regression on the phases extracted with get_phases()
     
+    INPUT: 
+    phases: Phase differences computed by function get_phases
+    ---------------------------------------------------------------------------
+    OUTPUT:
+    slope: Slope of the regression line
+    intercept: Intercept of the regression line
+    residuals: Respective residuals between phases and the regression line   
+    """
     num_traces = len(phases)
     x = np.arange(num_traces)
 
@@ -372,6 +413,23 @@ def regression_residuals(phases):
     return slope, intercept, residuals
 
 def get_phases_single(stim_obj, n_slices, ind_itd = 0):
+    """
+    computes phases for a single trial in order to be able to analyze 
+    intra-trial stability
+    
+    INPUT: 
+    stim_obj: stimulation object created out of one of the ITD files of the B 
+              folder
+    n_slices: number of 'slices' the single trial is supposed to be divided 
+              into
+    ind_itd: determines the ITD value used (apart from -6666 there are only two
+             so ind_itd should either be 0 or 1)
+    ---------------------------------------------------------------------------
+    OUTPUT:
+    phases: phase differences for the individual slices
+    single_itd: the actual ITD that is used
+    variance: variance between the phases
+    """
     stimuli = stim_obj.stim
     traces  = stim_obj.traces
     freqs   = stim_obj.freqs
@@ -423,10 +481,19 @@ def get_phases_single(stim_obj, n_slices, ind_itd = 0):
 
 def get_phases(stim_obj, index_itd = 0):
     """
-    INPUT:
-    needs to be "clean", i.e. the number of stimulus traces needs to be twice
-    the number of voltage traces
-    """    
+    computes phases across trials in order to be able to analyze 
+    inter-trial stability
+    
+    INPUT: 
+    stim_obj: stimulation object created out of one of the ITD files of the B 
+              folder
+    index_itd: determines the ITD value used (apart from -6666 there are only two
+             so ind_itd should either be 0 or 1)
+    ---------------------------------------------------------------------------
+    OUTPUT:
+    phases: phase differences for each individual trial
+    single_itd: the actual ITD that is used
+    """ 
     stimuli = stim_obj.stim
     traces  = stim_obj.traces
     freqs   = stim_obj.freqs
